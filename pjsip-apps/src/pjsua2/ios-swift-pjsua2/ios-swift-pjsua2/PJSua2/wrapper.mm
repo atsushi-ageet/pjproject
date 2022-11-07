@@ -140,5 +140,20 @@ PJSua2 pjsua2;
     pjsua2.outgoingCall(dest_uri);
 }
 
+- (void) handleIpChangeWrapper
+{
+    pjsua2.handleIpChange();
+}
+
+- (void) transportCreateWrapper : (pjsip_transport_type_e) transportType
+{
+    pjsua2.transportCreate(transportType);
+}
+
+- (void) transportCloseWrapper
+{
+    pjsua2.transportClose();
+}
+
 @end
 

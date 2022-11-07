@@ -127,9 +127,21 @@ class MyAccount : public Account {
     virtual void onIncomingCall(OnIncomingCallParam &iprm);
 };
 
+class MyEndpoint : public Endpoint {
+    public:
+    MyEndpoint(): Endpoint() {}
+    ~MyEndpoint() {}
+    
+    virtual void onTransportState(const OnTransportStateParam &prm);
+};
+
+void MyEndpoint::onTransportState(const OnTransportStateParam &prm) {
+    std::cout << "onTransportState type: " << prm.type << ", state: " << prm.state << std::endl;
+}
+
 
 //Creating objects
-Endpoint *ep = new Endpoint;
+Endpoint *ep = new MyEndpoint;
 MyAccount *acc = new MyAccount;
 
 void MyAccount::onRegState(OnRegStateParam &prm){
@@ -146,6 +158,7 @@ void MyAccount::onIncomingCall(OnIncomingCallParam &iprm) {
     call = new MyCall(*this, iprm.callId);
 }
 
+TransportId tid = -1;
 
 /**
  Create Lib with EpConfig
@@ -160,6 +173,8 @@ void PJSua2::createLib() {
     //LibInit
     try {
         EpConfig ep_cfg;
+        ep_cfg.logConfig.level = 5;
+        ep_cfg.logConfig.consoleLevel = 5;
         ep->libInit( ep_cfg );
     
     } catch(Error& err) {
@@ -170,7 +185,8 @@ void PJSua2::createLib() {
     try {
     TransportConfig tcfg;
     tcfg.port = 5060;
-    TransportId tid = ep->transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
+    tid = ep->transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
+    std::cout << "transportCreate " << tid << std::endl;
         
     } catch(Error& err) {
     std::cout << "Transport creation error: " << err.info() << std::endl;
@@ -346,6 +362,49 @@ void PJSua2::outgoingCall(std::string dest_uri) {
     std::cout << err.info() << std::endl;
     }
 }
+
+void PJSua2::handleIpChange() {
+    if (ep->libGetState() == PJSUA_STATE_RUNNING) {
+        IpChangeParam param;
+        param.restartListener = true;
+        param.restartLisDelay = 0;
+        try {
+            ep->handleIpChange(param);
+        } catch(Error& err) {
+            std::cout << err.info() << std::endl;
+        }
+    }
+}
+
+void PJSua2::transportCreate(pjsip_transport_type_e transportType) {
+    if (ep->libGetState() == PJSUA_STATE_RUNNING && tid == -1) {
+        TransportConfig config;
+        config.port = 5060;
+        try {
+            tid = ep->transportCreate(transportType, config);
+            std::cout << "transportCreate " << tid << std::endl;
+        } catch(Error& err) {
+            std::cout << "transportCreate error" << std::endl;
+            std::cout << err.info() << std::endl;
+            config.port = 0;
+            tid = ep->transportCreate(transportType, config);
+            std::cout << "transportCreate retry " << tid << std::endl;
+        }
+    }
+}
+
+void PJSua2::transportClose() {
+    if (ep->libGetState() == PJSUA_STATE_RUNNING && tid != -1) {
+        try {
+            std::cout << "transportClose " << tid << std::endl;
+            ep->transportClose(tid);
+            tid = -1;
+        } catch(Error& err) {
+            std::cout << err.info() << std::endl;
+        }
+    }
+}
+
 
 
 

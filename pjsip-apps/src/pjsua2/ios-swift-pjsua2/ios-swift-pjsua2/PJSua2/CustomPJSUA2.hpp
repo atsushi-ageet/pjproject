@@ -102,5 +102,10 @@ public:
      */
     void outgoingCall(std::string dest_uri);
 
+    void handleIpChange();
+    
+    void transportCreate(pjsip_transport_type_e transportType);
+    
+    void transportClose();
 };
 

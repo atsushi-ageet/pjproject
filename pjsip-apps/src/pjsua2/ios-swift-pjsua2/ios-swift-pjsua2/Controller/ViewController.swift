@@ -51,8 +51,30 @@ class ViewController: UIViewController {
         sipUsernameTField.addDoneButtonOnKeyboard()
         sipPasswordTField.addDoneButtonOnKeyboard()
         sipDestinationUriTField.addDoneButtonOnKeyboard()
+        
+        NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(ViewController.viewWillEnterForeground(_:)),
+                    name: UIApplication.willEnterForegroundNotification,
+                    object: nil)
+
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(ViewController.viewDidEnterBackground(_:)),
+                    name: UIApplication.didEnterBackgroundNotification,
+                    object: nil)
     }
     
+    @objc func viewWillEnterForeground(_ notification: Notification?) {
+        print("viewWillEnterForeground")
+//        CPPWrapper().handleIpChange()
+        CPPWrapper().transportCreateWrapper(PJSIP_TRANSPORT_UDP)
+    }
+    
+    @objc func viewDidEnterBackground(_ notification: Notification?) {
+        print("viewDidEnterBackground")
+        CPPWrapper().transportClose()
+    }
     
     //Refresh Button
     @IBAction func refreshStatus(_ sender: UIButton) {
@@ -66,6 +88,7 @@ class ViewController: UIViewController {
     
     //Login Button
     @IBAction func loginClick(_ sender: UIButton) {
+        print("loginClick")
         
         //Check user already logged in. && Form is filled
         if (CPPWrapper().registerStateInfoWrapper() == false
@@ -114,6 +137,7 @@ class ViewController: UIViewController {
     
     //Logout Button
     @IBAction func logoutClick(_ sender: UIButton) {
+        print("logoutClick")
         
         /**
         Only unregister from an account.

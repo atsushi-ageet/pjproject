@@ -18,7 +18,7 @@
  */
 
 #import <Foundation/Foundation.h>
-
+#import <pjsip/sip_types.h>
 /**
  Create a object to be able to use it from C++
  */
@@ -98,4 +98,10 @@
  Make outgoing call (string dest_uri) -> e.g. makeCall(sip:<SIP_USERNAME@SIP_IP:SIP_PORT>)
  */
 -(void) outgoingCallWrapper :(NSString*) dest_uri;
+
+-(void) handleIpChangeWrapper;
+
+-(void) transportCreateWrapper : (pjsip_transport_type_e) transportType;
+
+-(void) transportCloseWrapper;
 @end
